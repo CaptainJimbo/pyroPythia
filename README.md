@@ -1,10 +1,12 @@
-# Πυρογράφος — Pyrografos 🔥🛰️
+# pyroPythia 🔥🔮
 
-**The fire-writer.** Maps burned land from satellite imagery: give it a Greek
+**The fire oracle.** Maps burned land from satellite imagery: give it a Greek
 wildfire — a place and a date — and it returns a pixel-precise, severity-graded
 burn map, rendered on an interactive web map, with accuracy numbers you can trust.
 
-> Greece burns every summer. The satellites see everything. This writes it down.
+> The Pythia of Delphi read the future in vapors rising from the earth.
+> This one reads the aftermath of fire in light reflected from it — and one day,
+> the danger before it starts.
 
 ## What it does
 
