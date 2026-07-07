@@ -35,7 +35,9 @@ burn map, rendered on an interactive web map, with accuracy numbers you can trus
 
 ## Status
 
-🚧 Early scaffold — private while under construction.
+🚧 Under construction — data pipeline, physics baseline, and evaluation
+groundwork are in (see [EVALUATION.md](EVALUATION.md)); U-Net and the public
+web map are next.
 
 ## License & attribution
 
