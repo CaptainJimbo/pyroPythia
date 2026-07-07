@@ -37,6 +37,27 @@ burn map, rendered on an interactive web map, with accuracy numbers you can trus
 
 🚧 Early scaffold — private while under construction.
 
+## License & attribution
+
+Code is [MIT](LICENSE) © Dimitris Kogias.
+
+This project builds on open data and gratefully credits:
+
+- **FLOGA dataset** — © [Orion-AI-Lab, National Observatory of Athens](https://orionlab.space.noa.gr/),
+  licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (data) and
+  MIT (code). We use the imagery, masks, and Hellenic Fire Service labels in
+  modified form (single-event extracts, derived statistics, reprojected map
+  layers). Please cite their paper:
+  > Sdraka et al., *"FLOGA: A machine learning ready dataset, a benchmark and
+  > a novel deep learning model for burnt area mapping with Sentinel-2"*,
+  > IEEE JSTARS 2024. [arXiv:2311.03339](https://arxiv.org/abs/2311.03339)
+- **Sentinel-2 imagery** — contains modified Copernicus Sentinel data
+  (2017–2021), ESA. Scene copies for georeferencing via
+  [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/).
+- **Burnt-area ground truth** — Hellenic Fire Service, via FLOGA.
+- Web map basemap imagery © Esri; coastlines from
+  [GSHHG](https://www.soest.hawaii.edu/pwessel/gshhg/).
+
 ## Stack (planned)
 
 - **ML:** Python, PyTorch, semantic segmentation (U-Net / BAM-CD)
