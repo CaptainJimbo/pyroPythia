@@ -38,14 +38,14 @@ FINAL_THRESH = 8.0
 
 
 def global_estimate(ref: np.ndarray, ev: np.ndarray):
-    """Rough translation to seed the iteration (scale error smears this)."""
-    best = (0.0, 0, 0)
-    for dy, dx in phase_corr_peaks(ref, ev, k=5):
-        r = pearson(ref, ev, dy, dx)
-        if r > best[0]:
-            best = (r, dy, dx)
-    _, dy, dx = best
-    return np.array([1.0, 0.0, dx]), np.array([0.0, 1.0, dy])
+    """Candidate translations to seed the iteration, best-verified first
+    (scale error smears the correlation, so the top peak can be wrong —
+    callers should try seeds until patch matching sticks)."""
+    scored = sorted(
+        ((pearson(ref, ev, dy, dx), dy, dx) for dy, dx in phase_corr_peaks(ref, ev, k=5)),
+        reverse=True,
+    )
+    return [(np.array([1.0, 0.0, dx]), np.array([0.0, 1.0, dy])) for _, dy, dx in scored]
 
 
 def patch_matches(ref: np.ndarray, ev: np.ndarray, cx: np.ndarray, cy: np.ndarray):
@@ -113,14 +113,20 @@ def main() -> None:
 
     ref, (ref_west, ref_north), epsg, item_id = scene_band(scene, "B12")
     ev60 = b12[::DS, ::DS]
-    cx, cy = global_estimate(ref, ev60)
-    pts = []
-    for it in range(3):
+    for seed_i, (cx, cy) in enumerate(global_estimate(ref, ev60)):
         pts = patch_matches(ref, ev60, cx, cy)
-        if len(pts) < 4:
-            raise SystemExit(f"iter {it}: only {len(pts)} control points — cannot fit affine")
+        if len(pts) >= 4:
+            break
+        print(f"seed {seed_i}: only {len(pts)} control points, trying next peak")
+    else:
+        raise SystemExit("no global seed yields enough control points")
+    for it in range(3):
         cx, cy, max_resid, inliers, total = fit_affine(pts)
         print(f"iter {it}: {inliers}/{total} inliers, max residual {max_resid:.2f} ref px")
+        pts = patch_matches(ref, ev60, cx, cy)
+        if len(pts) < 4:
+            raise SystemExit(f"iter {it}: patch matching collapsed ({len(pts)} points)")
+    cx, cy, max_resid, inliers, total = fit_affine(pts)
 
     # compose: event 20 m px -> 60 m ds px -> ref 60 m px -> UTM meters
     # ref_px_x = cx0*(col/DS) + cx1*(row/DS) + cx2 ; east = ref_west + 60*ref_px_x

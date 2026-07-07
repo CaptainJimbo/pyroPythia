@@ -137,13 +137,31 @@ recovered shift does NOT match tile geometry (77|80, 101|102, 59|61, 60|61,
 map anyway) will settle them. All IoU>0.5 verdicts have geometry-consistent
 shifts (adjacent columns ≈ 110 km; zone 34/35 overlap ≈ 27 km in every year).
 
-**Bottom line: 13 confirmed duplicate pairs (IoU 0.54–0.98) + the Evia
-partial; ≥9 cross FLOGA's official splits, ≥5 touching the test set.**
-Duplication mechanisms: adjacent-tile overlap (~10 km strips) and UTM zone
-34/35 overlap (wide, affects all of central/eastern Greece). Remaining work
-for a complete audit: georeferenced adjudication of the ambiguous partials
-and the untriaged low-similarity candidates; our spatial-block CV must merge
-events by confirmed overlap before splitting.
+### Final adjudication (georeferenced, 2026-07-07 second session)
+
+With per-event affine georeferencing (see Georeferencing section), the
+ambiguous blob-correlation verdicts were settled geographically:
+
+| pair | geo verdict | note |
+|---|---|---|
+| 59\|61 | PARTIAL — 79 % of 59 inside 61 | 59 is on **Evia**, not Attica (earlier guess wrong) |
+| 60\|61 | PARTIAL — 63 % of 60 inside 61 | 60 also Evia |
+| 69\|74 | **distinct** (0 overlap) | blob "partial" was spurious |
+| 86\|94 | **distinct** (0 overlap) | blob "partial" was spurious |
+| 77\|80 | **distinct** (0 overlap) | blob "partial" was spurious |
+| 101\|102 | unadjudicated | 102's scene strip is mostly nodata; val\|val, low stakes |
+
+**★ The Evia 2021 megafire exists as FOUR events — 59, 60, 61, 62 — one per
+tile of the four-tile corner (GH/FH/GJ/FJ) it burned across. Official
+splits: train/train/val/train.** Centroids: 59 (23.369E, 38.782N),
+60 (23.343E, 38.787N), 61 (23.369E, 38.866N), 62 (23.311E, 38.891N).
+
+**Bottom line (adjudicated): 13 confirmed duplicate/partial-view pairs
+crossing or within splits, of which 8 cross split boundaries (4 touching
+test); 3 earlier suspects positively cleared.** Mechanisms: adjacent-tile
+overlap, tile-corner quadruplication (Evia), UTM zone 34/35 overlap.
+Our spatial-block CV must merge events by geographic overlap (now
+computable exactly) before splitting.
 
 ## Results log
 
