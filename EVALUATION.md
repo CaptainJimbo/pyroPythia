@@ -170,6 +170,30 @@ Takeaways:
   U-Net): RBR instead of dNBR, CLC mask to exclude agriculture, per-event
   dNBR offset (dNBR of unburned surroundings subtracted). Try before step 3.
 
+## FLOGA paper notes (arXiv 2311.03339, read 2026-07-07)
+
+- **Finding 1 is unacknowledged**: the paper contains no mention of
+  overlapping tiles, UTM zones, duplicate events, or dedup. Splits: "randomly
+  split the events … 60/20/20 … uniformly distributed over Greece" — random by
+  event id, which is exactly how duplicates cross splits. → Finding 1 is a
+  genuine discovery; raise with authors (politely) after georeferenced
+  adjudication completes the audit.
+- **Main experiments are 20 m, 9 bands** (10 m bands resampled to 20 m) —
+  matches our setup; band list confirms the alphabetical order we inferred.
+- **BAM-CD headline: burnt-class F1 88.48 / IoU 79.34** (mean F1 94.03).
+  Best spectral index (dMIRBI): mean F1 81.31. Best prior DL: SNUNet-CD 93.02.
+- **Comparability warning**: their metrics are pooled over *patches* —
+  256×256, clouds/shadows and >90 %-sea patches manually removed, negatives
+  subsampled 1:1 — and the test set is only **152 patches**. No per-event
+  reporting. Our whole-scene, per-event numbers (e.g. Evia dNBR F1 0.925 >
+  their burnt F1 0.885) are NOT comparable — small/hard fires drag pooled
+  patch metrics down, exactly as our size ladder shows. To compare against
+  BAM-CD we must replicate their patch protocol exactly, then ALSO report our
+  stricter whole-scene/per-event protocol side by side.
+- With a 152-patch test set, the ≥5 duplicate pairs touching test could move
+  reported numbers materially — quantify (which test patches belong to
+  duplicated events?) once georeferencing lands.
+
 ## Methodology decisions
 
 - **Splits**: spatial-block CV, never random pixel/patch splits (adjacent
