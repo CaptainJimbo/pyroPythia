@@ -92,6 +92,29 @@ with pixel-identical imagery and labels — a textbook spatial leak. Implication
   size-stratified. Note: totals across events double-count tile overlaps
   (Finding 1).
 
+### 2026-07-07 — dNBR baseline across the fire-size ladder (2021, 20 m)
+
+| event | burned (label) | pre→post gap | F1 | IoU | failure mode |
+|---|---|---|---|---|---|
+| 62 (Evia) | 45,393 ha | 15 d | **0.924** | 0.858 | — (dNBR's best case) |
+| 61 (Evia, dup view) | 27,554 ha | 15 d | 0.925 | 0.861 | — |
+| 40 | 184 ha | 5 d | 0.874 | 0.777 | — |
+| 54 | 389 ha | 5 d | 0.819 | 0.693 | mild over-prediction |
+| 80 | 111 ha | 5 d | **0.275** | 0.159 | agricultural mosaic: harvest/tillage between acquisitions reads as burn (3.5× over-prediction) |
+| 141 | 874 ha | **55 d** | **0.047** | 0.024 | long revisit gap: 55 days of summer senescence → 12,162 ha predicted vs 874 labeled |
+
+Takeaways:
+- The physics bar is **not one number**: F1 spans 0.05–0.93 driven by fire
+  size, land cover, and revisit gap. Pooled "baseline F1" would be a lie;
+  report per-stratum.
+- The two dominant failure modes (agricultural false alarms; long-gap
+  senescence) are *context* problems, not spectral ones — exactly what a
+  U-Net with spatial context should fix. This is the ML value proposition,
+  now measured rather than assumed.
+- Possible baseline improvements to keep the fight fair (before crowning the
+  U-Net): RBR instead of dNBR, CLC mask to exclude agriculture, per-event
+  dNBR offset (dNBR of unburned surroundings subtracted). Try before step 3.
+
 ## Methodology decisions
 
 - **Splits**: spatial-block CV, never random pixel/patch splits (adjacent

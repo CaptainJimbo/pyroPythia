@@ -67,6 +67,7 @@ def main() -> None:
         & ~np.isin(cloud_pre, bad_scl)
         & ~np.isin(cloud_post, bad_scl)
         & ~np.isnan(dnbr)
+        & (label != 2)  # burned by a different event — neither pred nor truth
     )
     pred = (dnbr > BURN_THRESHOLD) & valid
     truth = (label == 1) & valid

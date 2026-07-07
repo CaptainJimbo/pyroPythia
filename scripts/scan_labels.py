@@ -46,6 +46,8 @@ def main() -> None:
                     "tile": tile,
                     "burned_ha": round(burned_ha),
                     "other_fire_ha": round(other_fire_ha),
+                    "pre_scene": attrs.get("pre_sen2_file", ""),
+                    "post_scene": attrs.get("post_sen2_file", ""),
                 }
             )
             print(
