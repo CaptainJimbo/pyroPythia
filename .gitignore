@@ -56,3 +56,6 @@ web/dist/
 *.shp
 *.shx
 *.dbf
+
+# Private strategy notes
+CLAUDE.local.md
