@@ -28,11 +28,14 @@ def main() -> None:
     p.add_argument("event_id")
     p.add_argument("--gsd", type=int, default=20)
     p.add_argument("--out", default="data/floga")
+    p.add_argument("--masks-only", action="store_true",
+                   help="fetch only label + sea_mask (for georef/adjudication)")
     args = p.parse_args()
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_file = out_dir / f"FLOGA_{args.year}_event{args.event_id}_sen2_{args.gsd}.h5"
+    suffix = "_masks" if args.masks_only else ""
+    out_file = out_dir / f"FLOGA_{args.year}_event{args.event_id}_sen2_{args.gsd}{suffix}.h5"
 
     f = HttpRangeFile(floga_url(args.year, args.gsd))
     with h5py.File(f, "r") as hdf, h5py.File(out_file, "w") as out:
@@ -40,7 +43,8 @@ def main() -> None:
         grp = out.create_group(f"{args.year}/{args.event_id}")
         for k, v in ev.attrs.items():
             grp.attrs[k] = v
-        for name in ev:
+        names = ["label", "sea_mask"] if args.masks_only else list(ev)
+        for name in names:
             arr = ev[name][()]
             arr = downcast(name, arr)
             grp.create_dataset(name, data=arr, compression="gzip", compression_opts=4)

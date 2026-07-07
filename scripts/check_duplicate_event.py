@@ -23,8 +23,10 @@ def load(path: str):
     return event_id, land, burned
 
 
-def phase_corr_shift(a: np.ndarray, b: np.ndarray) -> tuple[int, int]:
-    """Shift (dy, dx) that maps b's frame onto a's, via phase correlation."""
+def phase_corr_peaks(a: np.ndarray, b: np.ndarray, k: int = 1) -> list[tuple[int, int]]:
+    """Top-k candidate shifts (dy, dx) mapping b's frame onto a's, by phase
+    correlation. The global peak can be a spurious lock (repetitive coastline,
+    nodata edges), so callers should verify candidates against a fit metric."""
     h = max(a.shape[0], b.shape[0])
     w = max(a.shape[1], b.shape[1])
     pa = np.zeros((2 * h, 2 * w), np.float32)
@@ -35,12 +37,24 @@ def phase_corr_shift(a: np.ndarray, b: np.ndarray) -> tuple[int, int]:
     cross = fa * np.conj(fb)
     cross /= np.abs(cross) + 1e-12
     corr = np.fft.irfft2(cross, s=pa.shape)
-    dy, dx = np.unravel_index(np.argmax(corr), corr.shape)
-    if dy > h:
-        dy -= 2 * h
-    if dx > w:
-        dx -= 2 * w
-    return int(dy), int(dx)
+
+    peaks = []
+    suppress = 25  # px radius around an accepted peak
+    for _ in range(k):
+        dy, dx = np.unravel_index(np.argmax(corr), corr.shape)
+        corr[max(dy - suppress, 0) : dy + suppress, max(dx - suppress, 0) : dx + suppress] = -np.inf
+        dy, dx = int(dy), int(dx)
+        if dy > h:
+            dy -= 2 * h
+        if dx > w:
+            dx -= 2 * w
+        peaks.append((dy, dx))
+    return peaks
+
+
+def phase_corr_shift(a: np.ndarray, b: np.ndarray) -> tuple[int, int]:
+    """Single best shift (dy, dx) that maps b's frame onto a's."""
+    return phase_corr_peaks(a, b, k=1)[0]
 
 
 def shift_into(a_shape, b: np.ndarray, dy: int, dx: int) -> np.ndarray:

@@ -25,6 +25,34 @@ The rule: every number ships with its caveat.
   for island fires — always report metrics on valid (land, clear-sky) pixels
   and say so.
 
+## Georeferencing (in progress, 2026-07-07 late session)
+
+FLOGA HDF5s carry no geotransform. Reconstruction attempts, in order:
+1. **Coastline registration** (GSHHG land vs `sea_mask`, phase correlation) —
+   worked for clean coastal scenes but the fit surface is flat on ~85 %-sea
+   scenes; raw agreement is a USELESS verification metric there (sea matches
+   sea under any shift) — use land-IoU. Even so: km-scale ambiguity.
+2. **SCL-vs-MPC** — FLOGA's `sen2_*_cloud_*` is the scene SCL, but MPC's
+   copies are reprocessed with a newer Sen2Cor baseline (codes differ) and
+   uniform sea gives the same flat surface. Rejected.
+3. **B12-vs-MPC** (same acquisition, image-to-image) — Pearson stuck at
+   0.5–0.6 with drifting locks. Quadrant diagnostic revealed why:
+
+**★ Data note: FLOGA arrays are NOT on the Sentinel-2 UTM grid.** Implied
+offsets drift ~8–11 % across the image with opposite signs in x/y —
+signature of a geographic (lat/lon) "common grid" (consistent with the
+paper's MODIS alignment). Array spans work out to ≈1.0° × ≈1.28° ≈ 110×110 km.
+Consequences:
+- Registration must fit scale+translation (or reproject the MPC reference to
+  the geographic grid first — cleanest; translation-only again after that).
+- **All hectare figures computed as px×400 m² are ≈4 % biased** (geographic
+  pixels at 38.9° N ≈ 22.3 m × 17.3 m ≈ 385 m²): Evia 27,554 ha is more like
+  ~26.5 k ha. Affects the census CSVs and baseline tables; correct once the
+  grid parameters are confirmed exactly. Duplicate-audit IoUs are unaffected
+  (label-shape alignment is grid-relative).
+- Verify grid params against FLOGA code/paper (create_dataset.py, appendix)
+  before locking in.
+
 ## Ground-truth caveats
 
 - Labels are Hellenic Fire Service **perimeter polygons rasterized**, not
