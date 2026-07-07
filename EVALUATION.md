@@ -88,12 +88,34 @@ shift found independently); 63|69 correctly rejected — the confirmation step
 discriminates rather than confirming everything. Recovered shifts match tile
 geometry (adjacent columns ≈ 110 km; cross-UTM-zone overlaps 27–47 km).
 
-**Bottom line: ≥7 duplicate pairs cross FLOGA's official splits, 4 touching
-the test set.** Duplication mechanisms: adjacent-tile overlap (~10 km strips)
-and UTM zone 34/35 overlap (wide, affects all of central/eastern Greece).
-Remaining work for a complete audit: exhaustive confirmation of all 85
-candidates (incl. dissimilar-size partials like Evia) + 2021 rescan pairs;
-our spatial-block CV must merge events by confirmed overlap before splitting.
+2021 batch (after scene-ID rescan; 131 candidates across all years now):
+
+| year | pair | aligned IoU | official splits |
+|---|---|---|---|
+| 2021 | 65\|66 | 0.737 | **train \| val** (2.6k/3.3k ha!) |
+| 2021 | 59\|60 | 0.641 | train \| train (Varympompi double-counted) |
+| 2021 | 15\|16 | 0.543 | **test \| train** |
+| 2021 | 93\|94 | 0.957 | ? \| test |
+| 2021 | 108\|109 | 0.909 | ? \| test |
+| 2021 | 63\|89 | 0.017 (distinct) | — |
+
+Note: events 52, 93, 99, 108 (2021) are absent from `data_split.csv` — the
+split file has 338 rows for 326 events; reconcile counts before quoting.
+
+Methodology caveat on PARTIAL verdicts: phase correlation of label blobs
+finds *some* peak even for unrelated fires. Verdicts in IoU 0.1–0.5 whose
+recovered shift does NOT match tile geometry (77|80, 101|102, 59|61, 60|61,
+86|94, 69|74) are unadjudicated — proper georeferencing (needed for the web
+map anyway) will settle them. All IoU>0.5 verdicts have geometry-consistent
+shifts (adjacent columns ≈ 110 km; zone 34/35 overlap ≈ 27 km in every year).
+
+**Bottom line: 13 confirmed duplicate pairs (IoU 0.54–0.98) + the Evia
+partial; ≥9 cross FLOGA's official splits, ≥5 touching the test set.**
+Duplication mechanisms: adjacent-tile overlap (~10 km strips) and UTM zone
+34/35 overlap (wide, affects all of central/eastern Greece). Remaining work
+for a complete audit: georeferenced adjudication of the ambiguous partials
+and the untriaged low-similarity candidates; our spatial-block CV must merge
+events by confirmed overlap before splitting.
 
 ## Results log
 

@@ -43,18 +43,26 @@ class HttpRangeFile(io.RawIOBase):
         self.url = r.url
 
     def _ranged_get(self, range_header: str) -> requests.Response:
-        # Dropbox content tokens are short-lived and 403 doubles as throttling;
-        # re-resolve the URL and back off before retrying
-        for attempt in range(6):
-            r = self.session.get(
-                self.url, headers={"Range": range_header}, timeout=60
-            )
-            if r.status_code in (403, 429) and attempt < 5:
+        # Dropbox content tokens are short-lived, 403 doubles as throttling,
+        # and long sessions get transient disconnects — back off, re-resolve
+        # the URL, and retry on all of it
+        for attempt in range(8):
+            try:
+                r = self.session.get(
+                    self.url, headers={"Range": range_header}, timeout=60
+                )
+                if r.status_code in (403, 429):
+                    raise requests.HTTPError(f"{r.status_code} (throttle)")
+                r.raise_for_status()
+                return r
+            except requests.RequestException as e:
+                if attempt == 7:
+                    raise
                 time.sleep(2**attempt)
-                self._refresh_url()
-                continue
-            r.raise_for_status()
-            return r
+                try:
+                    self._refresh_url()
+                except requests.RequestException:
+                    pass  # next loop iteration retries with the old URL
         raise RuntimeError("unreachable")
 
     def _block(self, idx: int) -> bytes:

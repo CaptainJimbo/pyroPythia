@@ -26,11 +26,27 @@ def main() -> None:
     out = Path("data/floga") / f"{args.year}_label_stats.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
 
+    fields = ["event_id", "pre_date", "post_date", "tile", "burned_ha",
+              "other_fire_ha", "pre_scene", "post_scene"]
+    done: set[str] = set()
+    if out.exists():
+        with open(out) as fh:
+            reader = csv.DictReader(fh)
+            if reader.fieldnames == fields:  # resume only same-schema files
+                done = {r["event_id"] for r in reader}
+    write_header = not done
+    mode = "a" if done else "w"
+
     f = HttpRangeFile(floga_url(args.year, args.gsd))
     rows = []
-    with h5py.File(f, "r") as hdf:
+    with h5py.File(f, "r") as hdf, open(out, mode, newline="") as out_fh:
+        writer = csv.DictWriter(out_fh, fieldnames=fields)
+        if write_header:
+            writer.writeheader()
         events = sorted(hdf[str(args.year)], key=int)
         for i, event_id in enumerate(events):
+            if event_id in done:
+                continue
             ev = hdf[str(args.year)][event_id]
             label = ev["label"][0]
             px_per_ha = (args.gsd**2) / 10_000
@@ -50,20 +66,17 @@ def main() -> None:
                     "post_scene": attrs.get("post_sen2_file", ""),
                 }
             )
+            writer.writerow(rows[-1])
+            out_fh.flush()
             print(
                 f"[{i + 1}/{len(events)}] event {event_id}: {burned_ha:,.0f} ha "
                 f"(fetched {f.bytes_fetched / 2**20:.0f} MiB)",
                 flush=True,
             )
 
-    with open(out, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-        w.writeheader()
-        w.writerows(rows)
-
-    sizes = np.array([r["burned_ha"] for r in rows])
-    print(f"\nwrote {out}")
-    print(f"events: {len(sizes)}, total burned: {sizes.sum():,.0f} ha")
+    sizes = np.array([r["burned_ha"] for r in rows]) if rows else np.array([0])
+    print(f"\nwrote {out} ({len(rows)} new rows, {len(done)} resumed)")
+    print(f"new total burned: {sizes.sum():,.0f} ha")
     print(f"size quartiles (ha): {np.percentile(sizes, [0, 25, 50, 75, 100]).round(0)}")
 
 

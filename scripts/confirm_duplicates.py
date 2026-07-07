@@ -10,6 +10,8 @@ Pairs are hardcoded from find_duplicate_candidates.py triage (overlapping
 tiles + similar size), plus the proven Evia pair as a positive control.
 """
 
+import sys
+
 import h5py
 import hdf5plugin  # noqa: F401
 import numpy as np
@@ -34,6 +36,14 @@ PAIRS = [
 
 
 def main() -> None:
+    # override built-in pairs via CLI: year:event_a:event_b:splits ...
+    pairs = PAIRS
+    if len(sys.argv) > 1:
+        pairs = []
+        for tok in sys.argv[1:]:
+            year, a, b, splits = tok.split(":")
+            pairs.append((int(year), a, b, splits))
+
     handles: dict[int, h5py.File] = {}
 
     def labels(year: int, event_id: str) -> np.ndarray:
@@ -43,7 +53,7 @@ def main() -> None:
 
     print(f"{'year':>5} {'pair':>9} {'splits':>12} {'ha_a':>7} {'ha_b':>7} "
           f"{'shift_km':>12} {'IoU':>6}  verdict")
-    for year, a, b, splits in PAIRS:
+    for year, a, b, splits in pairs:
         la, lb = labels(year, a), labels(year, b)
         dy, dx = phase_corr_shift(la.astype(np.float32), lb.astype(np.float32))
         lb_in_a = shift_into(la.shape, lb, dy, dx)
