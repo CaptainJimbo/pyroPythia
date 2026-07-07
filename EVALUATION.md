@@ -62,6 +62,39 @@ with pixel-identical imagery and labels — a textbook spatial leak. Implication
   (e.g. two administrative fire records); check the FLOGA paper's dedup
   discussion, and raise as a question/issue with the authors first.
 
+### Update (same day): the leak is systematic, not a one-off
+
+Sweeping all years (`find_duplicate_candidates.py`: same pre+post datatakes,
+different tiles → 85 candidates; triaged to 10 by tile overlap + size, then
+label-alignment confirmation via `confirm_duplicates.py` — labels only, read
+remotely; two fires can share a datatake but not a burn-scar *shape*):
+
+| year | pair | aligned IoU | official splits |
+|---|---|---|---|
+| 2017 | 45\|83 | 0.977 | **test \| val** |
+| 2017 | 53\|86 | 0.943 | train \| train |
+| 2017 | 43\|85 | 0.941 | **test \| train** |
+| 2018 | 28\|39 | 0.961 | **val \| test** |
+| 2018 | 7\|25 | 0.498 (partial) | train \| train |
+| 2018 | 19\|40 | 0.960 | train \| val |
+| 2019 | 39\|40 | 0.945 | val \| train |
+| 2019 | 50\|74 | 0.967 | **test \| train** |
+| 2020 | 92\|93 | 0.919 | train \| train |
+| 2020 | 63\|69 | 0.090 (distinct) | — |
+| 2021 | 61\|62 | 0.483 (partial) | val \| train (Evia) |
+
+Method controls: Evia pair recovered as expected (partial, same 111.3 km
+shift found independently); 63|69 correctly rejected — the confirmation step
+discriminates rather than confirming everything. Recovered shifts match tile
+geometry (adjacent columns ≈ 110 km; cross-UTM-zone overlaps 27–47 km).
+
+**Bottom line: ≥7 duplicate pairs cross FLOGA's official splits, 4 touching
+the test set.** Duplication mechanisms: adjacent-tile overlap (~10 km strips)
+and UTM zone 34/35 overlap (wide, affects all of central/eastern Greece).
+Remaining work for a complete audit: exhaustive confirmation of all 85
+candidates (incl. dissimilar-size partials like Evia) + 2021 rescan pairs;
+our spatial-block CV must merge events by confirmed overlap before splitting.
+
 ## Results log
 
 ### 2026-07-07 — dNBR physics baseline, Evia 2021 (event 61), 20 m
