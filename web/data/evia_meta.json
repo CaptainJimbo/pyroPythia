@@ -1,0 +1,19 @@
+{
+  "name": "evia",
+  "year": "2021",
+  "event": "62",
+  "pre_date": "2021-08-03",
+  "post_date": "2021-08-18",
+  "label_ha": 46365,
+  "dnbr_ha": 40610,
+  "severity_ha": {
+    "low": 4169,
+    "moderate-low": 6678,
+    "moderate-high": 9225,
+    "high": 24672
+  },
+  "center": [
+    23.29881,
+    38.89935
+  ]
+}

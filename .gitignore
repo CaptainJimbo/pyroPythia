@@ -12,8 +12,8 @@ venv/
 # Notebooks
 .ipynb_checkpoints/
 
-# Data & models (large artifacts stay out of git)
-data/
+# Data & models (large artifacts stay out of git; web/data IS tracked)
+/data/
 *.fits
 *.nc
 *.h5
