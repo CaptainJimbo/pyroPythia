@@ -50,6 +50,12 @@ def main() -> None:
             grp.create_dataset(name, data=arr, compression="gzip", compression_opts=4)
             print(f"{name}: {arr.shape} {arr.dtype} "
                   f"(fetched so far: {f.bytes_fetched / 2**20:.0f} MiB)", flush=True)
+        if args.masks_only:
+            # B12 slice for georeferencing (band axis is alphabetical, B12 = 7)
+            b12 = downcast("b12", ev["sen2_20_post"][7:8])
+            grp.create_dataset("b12_post", data=b12, compression="gzip", compression_opts=4)
+            print(f"b12_post: {b12.shape} {b12.dtype} "
+                  f"(fetched so far: {f.bytes_fetched / 2**20:.0f} MiB)", flush=True)
 
     size = out_file.stat().st_size / 2**20
     print(f"\nwrote {out_file} ({size:.0f} MiB); "

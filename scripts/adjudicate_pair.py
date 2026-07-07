@@ -29,30 +29,32 @@ def load(path: Path):
 def main() -> None:
     id_a, burn_a, geo_a = load(Path(sys.argv[1]))
     id_b, burn_b, geo_b = load(Path(sys.argv[2]))
-    px = 20.0
+    aa, ab, ac, ad, ae, af = geo_a["affine"]
+    ba, bb, bc, bd, be, bf = geo_b["affine"]
 
     rows, cols = np.where(burn_b)
-    east_b = geo_b["ul_east"] + (cols + 0.5) * px
-    north_b = geo_b["ul_north"] - (rows + 0.5) * px
+    east_b = ba * cols + bb * rows + be
+    north_b = bc * cols + bd * rows + bf
     if geo_a["epsg"] != geo_b["epsg"]:
         tr = Transformer.from_crs(geo_b["epsg"], geo_a["epsg"], always_xy=True)
         east_b, north_b = tr.transform(east_b, north_b)
 
-    ca = np.round((east_b - geo_a["ul_east"]) / px - 0.5).astype(int)
-    ra = np.round((geo_a["ul_north"] - north_b) / px - 0.5).astype(int)
+    # invert a's affine to map UTM -> a's pixel indices
+    inv = np.linalg.inv(np.array([[aa, ab], [ac, ad]]))
+    ca = np.round(inv[0, 0] * (east_b - ae) + inv[0, 1] * (north_b - af)).astype(int)
+    ra = np.round(inv[1, 0] * (east_b - ae) + inv[1, 1] * (north_b - af)).astype(int)
     inside = (ra >= 0) & (ra < burn_a.shape[0]) & (ca >= 0) & (ca < burn_a.shape[1])
     inter = int(burn_a[ra[inside], ca[inside]].sum())
 
     na, nb = int(burn_a.sum()), int(burn_b.sum())
     iou = inter / (na + nb - inter)
-    ha = lambda n: n * 400 / 10_000
+    ha = lambda n: n * geo_a["px_area_m2"] / 10_000
     frac_a, frac_b = inter / na, inter / nb
     verdict = "DUPLICATE" if iou > 0.5 else ("PARTIAL" if max(frac_a, frac_b) > 0.5 else "distinct")
 
     print(f"pair {id_a}|{id_b}: geo-IoU {iou:.3f}  "
           f"inter {ha(inter):,.0f} ha = {frac_a:.1%} of {id_a} / {frac_b:.1%} of {id_b}  "
-          f"[land agreement {geo_a['land_agreement']:.0%}/{geo_b['land_agreement']:.0%}]"
-          f"  {verdict}")
+          f"[fit inliers {geo_a['inliers']}/{geo_b['inliers']}]  {verdict}")
 
 
 if __name__ == "__main__":
