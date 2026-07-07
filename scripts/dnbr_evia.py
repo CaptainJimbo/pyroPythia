@@ -23,7 +23,9 @@ B12, B8A = 7, 8  # SWIR2, narrow NIR
 # USGS dNBR severity thresholds (unscaled)
 SEV_BOUNDS = [-0.5, -0.1, 0.1, 0.27, 0.44, 0.66, 1.3]
 SEV_LABELS = ["regrowth", "unburned", "low", "moderate-low", "moderate-high", "high"]
-SEV_COLORS = ["#1a9850", "#f7f7f7", "#fee08b", "#fdae61", "#f46d43", "#a50026"]
+# hotter = worse, with hard steps between classes — the classic USGS ramp's
+# two oranges are indistinguishable over satellite imagery
+SEV_COLORS = ["#1a9850", "#f7f7f7", "#ffe08a", "#fb9a35", "#e8330f", "#5c0011"]
 BURN_THRESHOLD = 0.27  # moderate-low and up counts as burned for IoU/F1
 
 
