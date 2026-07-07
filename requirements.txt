@@ -3,3 +3,10 @@ hdf5plugin
 numpy
 requests
 matplotlib
+geopandas
+rasterio
+pyproj
+shapely
+mgrs
+pystac-client
+planetary-computer
