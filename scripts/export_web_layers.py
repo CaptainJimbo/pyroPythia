@@ -62,6 +62,15 @@ def main() -> None:
             continue
         sev[valid & (dnbr > lo) & (dnbr <= hi)] = i + 1
 
+    # burn-severity maps are drawn within the fire perimeter (BAER practice):
+    # scene-wide dNBR speckle (harvest, senescence) far from the fire reads
+    # as bugs on a map. Buffer ~500 m so boundary disagreement stays visible.
+    inside = label == 1
+    for _ in range(25):  # 25 px ~ 500 m box dilation
+        inside |= (np.roll(inside, 1, 0) | np.roll(inside, -1, 0)
+                   | np.roll(inside, 1, 1) | np.roll(inside, -1, 1))
+    sev[~inside] = 0
+
     # crop to the labeled fire + margin (dNBR positives elsewhere in the
     # scene — other fires, ag fields — would inflate the box)
     rows, cols = np.where(label == 1)
@@ -87,7 +96,10 @@ def main() -> None:
     lut = np.zeros((len(SEV_LABELS) + 1, 4), dtype=np.uint8)
     for i, color in enumerate(SEV_COLORS):
         r_, g_, b_, _ = to_rgba(color)
-        lut[i + 1] = [int(r_ * 255), int(g_ * 255), int(b_ * 255), 200]
+        # "low" is marginal (0.1 < dNBR <= 0.27, below the burned threshold):
+        # render it fainter so the solid painting matches the headline number
+        alpha = 110 if SEV_LABELS[i] == "low" else 210
+        lut[i + 1] = [int(r_ * 255), int(g_ * 255), int(b_ * 255), alpha]
     rgba = lut[dst]
 
     import matplotlib.image
@@ -109,7 +121,8 @@ def main() -> None:
         "name": name, "year": year, "event": event_id,
         "pre_date": attrs["pre_image_date"], "post_date": attrs["post_image_date"],
         "label_ha": round(float((label == 1).sum() * px_ha)),
-        "dnbr_ha": round(float(((dnbr > BURN_THRESHOLD) & valid).sum() * px_ha)),
+        # within the fire zone, consistent with what the map paints
+        "dnbr_ha": round(float(((dnbr > BURN_THRESHOLD) & valid & inside).sum() * px_ha)),
         "severity_ha": {SEV_LABELS[i]: round(float((sev == i + 1).sum() * px_ha))
                         for i in range(len(SEV_LABELS))
                         if SEV_LABELS[i] not in ("regrowth", "unburned")},
